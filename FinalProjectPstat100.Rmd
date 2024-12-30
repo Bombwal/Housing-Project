@@ -1,0 +1,350 @@
+---
+title: 'Final Project: Housing Dataset'
+author:
+- Ria Shrivastava
+- Aakash Sriram
+- Niko Chiotellis
+- Arjun Bombwal
+- Joseph Hsu
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 10pt
+geometry: margin=1in
+format:
+  pdf:
+    number-sections: false
+    toc: false
+---
+
+
+#### Introduction
+Our group aimed to focus our research on the impact of various factors on housing prices, and what potential correlations and connections can be observed through these factors. Specifically, we aim to identify the most influential predictors of housing prices and to determine whether a location’s desirability, as reflected by its designation as a “preferred area,” affects housing prices.  Our hypotheses are as follows: The area of the home, measured in square feet, along with the number of bedrooms and bathrooms, will emerge as the most dominant predictors of housing prices. On average, properties situated in “preferred areas” will command higher prices than their counterparts in areas not con- sidered “preferred”. Dataset: Our dataset contained a wide range of factors that could influence housing prices. These factors were:
+- **price (numeric):** Housing price (target variable)
+- **area (numeric):** Total area of the house in square feet
+- **bedrooms (numeric):** Number of bedrooms
+- **bathrooms (numeric):** Number of bathrooms
+- **stories (numeric):** Number of stories in the house
+- **mainroad (categorical):** Whether the house is near a main road (yes/no)
+- **guestroom (categorical):** Whether the house has a guest room (yes/no)
+- **basement (categorical):** Whether the house has a basement (yes/no)
+- **hotwaterheating, airconditioning (categorical):** Whether these amenities are present (yes/no)
+- **prefarea (categorical):** Whether the house is in a preferred area (yes/no)
+- **furnishingstatus (categorical):** Whether the house is furnished, semi-furnished, or unfurnished
+Importance and Relevance of the Analysis:
+Our project holds significant importance and relevance in its potential to provide insights into the dy- namics of the housing market; by identifying the factors that contribute to a property’s value, the project can help stakeholders such as buyers, sellers, and real estate agents, make well-informed decisions.
+
+
+#### **Research Questions:** ##
+
+
+**Question 1:**  
+
+What factors are most predictive of housing prices?  
+
+**Hypothesis 1:**  
+The area of the home and the number of bedrooms/bathrooms are heavily predictive of housing prices.  
+
+**Question 2:**  
+Does whether a home is in a preferred area affect housing prices?  
+
+**Hypothesis 2:**  
+Homes in a preferred location tend to have higher housing prices. 
+
+#### Modeling Process and Model Selection:
+
+We decided to use the multiple regression model to predict factors of housing prices because of its strength in helping us understand how different factors influence a continuous outcome. We can use the model to analyze relationships between continuous predictors (such as area) and our target variable, the price. Since we have multiple predictors (the various independent variables), the multiple linear regression model is effective for modeling continuous outcomes. The model allows us to include multiple predictors simultaneously, which is especially useful as housing prices are affected by a mix of variables such as area, the number of bedrooms and bathrooms, and whether the house has main road access. By using this model, we can see the individual contributions of each predictor variable while controlling for the influence of others, allowing us to see the variables' isolated impact on housing prices. 
+
+#### Implementation 
+Our multiple regression model follows the equation: price = β0 + β1(area) + β2(bedrooms) + β3(bathrooms) + β4(stories) + β5(prefarea) + ϵ, where price represents the housing price, β0 represents the y-intercept, area, bedrooms, bathrooms, stories, and prefarea are the predictor variables, and β1, β2, β3, β4, and β5 are the coefficients of the predictor variables, and ϵ is the error term.
+
+#### Results:
+
+#### Coefficient Plot Analysis:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=6, fig.height=4}
+
+library(readr)
+library(ggplot2)
+
+housing_data <- read.csv("/Users/aakashsriram/Downloads/Housing-1.csv")
+model <- lm(price ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+
+summary(model)
+
+coefficients <- summary(model)$coefficients
+coeff_df <- data.frame(
+  Predictor = rownames(coefficients),        
+  
+  Coefficient = coefficients[, "Estimate"] / 1000, 
+  
+  StdError = coefficients[, "Std. Error"] / 1000   
+  
+)
+
+
+coeff_df$Predictor <- c(
+  "Intercept",       # const
+  "Area (sq ft)",    # area
+  "# of Bedrooms",   # bedrooms
+  "# of Bathrooms",  # bathrooms
+  "# of Stories",    # stories
+  "Preferred Area"   # prefarea_yes
+)
+
+print(coeff_df)
+
+ggplot(coeff_df, aes(x = reorder(Predictor, Coefficient), y = Coefficient)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_errorbar(aes(ymin = Coefficient - StdError, ymax = Coefficient + StdError), width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Effect of Predictor Variables on Housing Price",
+    x = "Predictor Variables",
+    y = "Coefficient Value (in Thousands)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9, face = "bold"),
+    plot.title = element_text(size = 11, face = "bold", hjust = 0.5),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10)
+  )
+
+model
+```
+
+The intercept is negative (-218,257), which means that when all predictor values (area, bedrooms, bathrooms, stories, and preferred area) are set to zero, the model predicts a base price of -218,257. This value is not practically meaningful in the context of housing prices, as it represents a hypothetical situation where no house exists. The intercept serves as a mathematical baseline for the regression model rather than a real-world scenario.
+
+The coefficient for the area of the house is approximately 341 (scaled to thousands in the chart). This indicates that for every additional square foot of house area, the price increases by 341 units. This significant positive contribution reflects the high value placed on larger living spaces in real estate markets, where buyers generally prefer more spacious homes.
+
+The number of bedrooms has a coefficient of approximately 178 (scaled to thousands). This suggests that adding one more bedroom increases the housing price by 178,000 units, holding all other variables constant. While statistically significant, its impact is smaller compared to bathrooms, likely because buyers prioritize functional aspects like bathrooms and overall space over the number of bedrooms.
+
+The number of bathrooms has the largest effect among the predictors, with a coefficient of approximately 1,200 (scaled to thousands). This means each additional bathroom adds about 1.2 million units to the house price. This strong influence highlights the importance of convenience and functionality in home valuations, as bathrooms are a critical factor in a home's utility and appeal.
+
+The number of stories contributes a coefficient of approximately 528 (scaled to thousands), indicating that each additional story adds 528,000 units to the house price. Multi-story homes are often perceived as more desirable, offering better utilization of space and enhanced aesthetics, which likely drives this value.
+
+The coefficient for being in a preferred area is approximately 882 (scaled to thousands), meaning homes in preferred locations are priced 882,000 units higher on average than those in non-preferred areas. This aligns with the general notion that location is a key determinant of property value, as preferred areas often offer better amenities, safety, and accessibility.
+
+#### Comparision of Houses with Preferred Area vs Non-Preferred:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=6, fig.height=4}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+model <- lm(price ~ prefarea, data = housing_data)
+
+summary(model)
+
+housing_data$prefarea <- as.factor(housing_data$prefarea)
+
+mean_prices <- housing_data %>%
+  group_by(prefarea) %>%
+  summarise(mean_price = mean(price, na.rm = TRUE))
+
+ggplot(mean_prices, aes(x = prefarea, y = mean_price, fill = prefarea)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  labs(
+    title = "Average Price of Houses by Preferred Area",
+    x = "Preferred Area",
+    y = "Average Price"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2") +
+  geom_text(aes(label = comma(round(mean_price))), vjust = -0.5, size = 5) +
+  scale_y_continuous(labels = comma)
+```
+
+The houses in non-preferred areas have an average house price of approximately 4,425,299 and the houses in preferred areas have an average price of approximately 5,879,046. The difference in average price between preferred and non-preferred areas is 1,453,747, indicating that houses in preferred areas are, on average, more expensive. This suggests that being located in preferred areas positively affects the house value.
+
+#### Checking Assumptions:
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE, fig.width = 6, fig.height = 4, fig.align = 'center'}
+library(ggplot2)
+library(patchwork)
+
+model <- lm(price ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+
+residuals_vs_fitted <- ggplot(data = data.frame(fitted = fitted(model), residuals = residuals(model)),
+                              aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+qq_plot <- ggplot(data = data.frame(residuals = residuals(model)), aes(sample = residuals)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Normal Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+scale_location <- ggplot(data = data.frame(fitted = fitted(model), std_residuals = rstandard(model)),
+                         aes(x = fitted, y = abs(std_residuals))) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, color = "red") +
+  labs(title = "Scale-Location Plot", x = "Fitted Values", y = "Standardized Residuals") +
+  theme_minimal()
+
+cooks_distance <- ggplot(data = data.frame(index = seq_along(fitted(model)), cooksd = cooks.distance(model)),
+                         aes(x = index, y = cooksd)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Cook's Distance", x = "Observation Index", y = "Cook's Distance") +
+  theme_minimal()
+
+
+(residuals_vs_fitted + qq_plot) / (scale_location + cooks_distance)
+
+
+```
+
+The diagnostic plots indicate that the model fits the data reasonably well but has some issues. It appears that influential points (Cook's Distance) may be skewing the results. There is also mild heteroscedasticity (shown on the Scale-Location Plot) suggesting variance issues. Residuals are mostly normal (Q-Q Plot) but show slight tail deviations. Linearity is mostly satisfied (Residuals vs. Fitted Values) but could be improved. To fix this, we apply a Box-Cox transformation.
+
+#### Applying Transformations:
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE, fig.width = 6, fig.height = 4, fig.align= 'center'}
+# Load required libraries
+library(MASS)
+library(ggplot2)
+library(patchwork) 
+
+
+model <- lm(price ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+
+boxcox_result <- boxcox(model, lambda = seq(-2, 2, 0.1), plotit = TRUE)
+
+
+optimal_lambda <- boxcox_result$x[which.max(boxcox_result$y)]
+cat("Optimal Lambda for Box-Cox Transformation:", optimal_lambda, "\n")
+
+
+if (abs(optimal_lambda) > 1e-6) {
+  housing_data$price_transformed <- (housing_data$price^optimal_lambda - 1) / optimal_lambda
+} else {
+  housing_data$price_transformed <- log(housing_data$price)
+}
+
+
+transformed_model <- lm(price_transformed ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+
+
+# 1. Residuals vs Fitted Values
+residuals_vs_fitted <- ggplot(data = data.frame(fitted = fitted(transformed_model), residuals = residuals(transformed_model)),
+                              aes(x = fitted, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# 2. Normal Q-Q Plot
+qq_plot <- ggplot(data = data.frame(residuals = residuals(transformed_model)), aes(sample = residuals)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Normal Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+combined_plots <- residuals_vs_fitted + qq_plot
+combined_plots
+
+```
+
+After applying the Box-Cox transformation, the data shows significant improvement, meeting the assumptions of linearity and homoscedasticity. This transformation is a statistical technique used to stabilize variance and make the data more closely approximate a normal distribution, which is essential for many statistical models. The Box-Cox transformation is defined as a power transformation, where a parameter 𝜆 is optimized to transform the data. When 𝜆 = 0, the transformation takes the form of a natural logarithm; for other values, it is a power function. By transforming the data, we address issues such as skewness and unequal variances, resulting in a dataset that better fits the requirements for linear regression and other parametric analyses.
+
+#### VIF and Multicollinearity:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(car)
+vif_values <- vif(model)
+print(vif_values)
+```
+
+In this case, the VIF values for all predictors, including area, bedrooms, bathrooms, stories, and prefarea, are under 5 and close to 1, ranging from 1.06 to 1.31. These values suggest that there is little to no multicollinearity in the model.VIF values below 5 are considered acceptable, and values close to 1 indicate no correlation between a predictor and other predictors in the model. Therefore, the multicollinearity assumption is satisfied, and there is no need for corrective action.
+
+#### Comparing Transformed Model to Original:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(performance)
+
+PerfModel <- compare_performance(model, transformed_model)
+PerfModel
+plot(PerfModel)
+```
+
+
+The blue polygon (initial model) is smaller in these dimensions compared to the red polygon (transformed model). This indicates that the transformed model has higher R² and Adjusted R² values. This means the transformed model explains a higher proportion of the variability in the housing prices, even after accounting for the number of predictors. This suggests that applying the Box-Cox transformation improved the fit of the model. The transformed model (red polygon) has a lower RMSE than the initial model. This means that the transformed model has better predictive accuracy and smaller errors when predicting housing prices. This suggests that the skewness in the dependent variable (price) was causing larger prediction errors in the initial model, which the transformation corrected. For the AIC and BIC (Akaike and Bayesian Information Criteria), the transformed model has lower AIC and BIC values. Both AIC and BIC reward models with better fit while penalizing complexity. Lower values for the transformed model indicate that it provides a better trade-off between goodness of fit and model complexity compared to the initial model. Lastly, the transformed model shows a smaller value for sigma, representing the residual standard deviation. This implies that the residuals (errors) from the transformed model are smaller on average, further confirming the improved fit.
+
+#### **Comparing Coefficient Values Between Models:**
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=6, fig.height=4, fig.align= 'center'}
+library(ggplot2)
+library(gridExtra)
+
+model_original <- lm(price ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+model_transformed <- lm(price_transformed ~ area + bedrooms + bathrooms + stories + prefarea, data = housing_data)
+
+coefficients_original <- data.frame(
+  Term = names(coef(model_original)),
+  Coefficient = coef(model_original)
+)
+coefficients_transformed <- data.frame(
+  Term = names(coef(model_transformed)),
+  Coefficient = coef(model_transformed)
+)
+
+plot_original <- ggplot(coefficients_original, aes(x = reorder(Term, Coefficient), y = Coefficient)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  coord_flip() +
+  labs(title = "Coefficient Plot: Original Model",
+       x = "Predictors", y = "Coefficient Value") +
+  theme_minimal()
+
+plot_transformed <- ggplot(coefficients_transformed, aes(x = reorder(Term, Coefficient), y = Coefficient)) +
+  geom_bar(stat = "identity", fill = "red") +
+  coord_flip() +
+  labs(title = "Coefficient Plot: Transformed Model",
+       x = "Predictors", y = "Coefficient Value") +
+  theme_minimal()
+
+grid.arrange(plot_original, plot_transformed, ncol = 2)
+
+```
+
+The coefficients for the transformed model are much smaller than those for the original model.
+
+#### Visualization:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width = 6, fig.height= 4, fig.align='center'}
+library(cluster)
+library(factoextra)
+
+features <- housing_data[, c("area", "bedrooms", "bathrooms", "stories", "price")]
+features_scaled <- scale(features)
+
+pca_result <- prcomp(features_scaled)
+
+kmeans_result <- kmeans(features_scaled, centers = 3, nstart = 25)
+
+housing_data$cluster <- as.factor(kmeans_result$cluster)
+
+fviz_cluster(kmeans_result, data = features_scaled,
+             geom = "point", ellipse.type = "convex", 
+             main = "Cluster Visualization with PCA",
+             labelsize = 5)
+
+```
+
+The PCA cluster plot shows how houses group together based on their features, such as `area`, `bedrooms`, `bathrooms`, `stories`, and `price`. By reducing these features into two principal components (PC1 and PC2), the plot simplifies the data while capturing most of its variation. Each cluster represents houses with similar characteristics: for example, one cluster might include smaller, affordable homes, while another represents larger, higher-priced properties. This visualization helps answer the first research question by showing how features like size and amenities influence housing price groupings. It highlights whether certain characteristics naturally segment houses into distinct categories, which could suggest trends in how these features impact pricing. For the second research question, the clusters might indicate whether houses in preferred areas form distinct groups, which could suggest that location strongly influences house characteristics and price.
+
+#### Final Model Interpretation:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+transformed_model
+```
+
+The regression model predicts the transformed housing price (price_transformed), which was adjusted using a Box-Cox transformation to address issues like skewness or heteroscedasticity in the original price variable. This transformation helps stabilize variance and improves the model's assumptions. The model suggests that, holding other variables constant, the transformed price increases by approximately 0.0003 units for every additional square foot of area. Adding an extra bedroom increases the transformed price by about 0.202 units, while adding another bathroom has a much larger impact, increasing the transformed price by almost 1 unit. For each additional story, the transformed price rises by 0.497 units. Furthermore, houses in a preferred area (prefarea = yes) see an increase of about 0.865 units in the transformed price compared to houses not in preferred areas. The intercept value, 31.92, represents the baseline transformed price when all predictors are zero, though this is more theoretical since these values are unlikely in real-world scenarios. It's important to note that these coefficients reflect changes in the transformed price scale and not the original price; to interpret them in monetary terms, the results would need to be back-transformed to the original scale.
+
+#### Conclusion:
+Research Question 1: The analysis identified significant predictors of housing prices, with bathrooms, preferred area, and stories emerging as the strongest contributors. Bathrooms had the largest impact, demonstrating that buyers highly value amenities that enhance convenience and functionality. Preferred area also significantly influenced prices, reflecting the importance of location in driving housing value. While area and bedrooms were statistically significant, their impact was smaller, suggesting that size alone is less critical than amenities and location. These findings partially support our hypothesis, confirming that amenities and location are key drivers of housing prices, while challenging the expectation that house size would have a substantial effect.
+
+Research Question 2: The results confirm that being in a preferred area significantly increases housing prices, as homes in these locations consistently command higher values. Clustering analysis revealed that homes in preferred areas tend to form high-value groups. These results align strongly with our hypothesis, affirming the crucial role of location in determining housing prices and highlighting its interplay with other features like amenities and layout.
